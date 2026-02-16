@@ -74,12 +74,12 @@ colors = {
     'Electric Blue': [0.0, 0.7, 1.0],
     'Sky Blue': [0.5294, 0.8078, 0.9216],
     'Mint': [0.4, 0.8784, 0.7],
-    'Teal': [0.0, 0.502, 0.502], # really low brightness
+    'Deep Green': [0.0, 0.70, 0.50], # really low brightness
     'Deep Purple': [0.5412, 0.0, 0.8863],
     'Hot Pink': [1.0, 0.4118, 0.7059],
     'Amethyst': [0.6, 0.5, 0.7],
     'Fuchsia': [1.0, 0.0, 1.0],
-    'Lime Green': [0.1961, 0.8039, 0.1961],
+    'Lime Green': [0.30, 0.8039, 0.0],
     'Spring Green': [0.0, 1.0, 0.498],
     'Tangerine': [1.0, 0.5098, 0.0],
     'Scarlet': [1.0, 0.1373, 0.0],
@@ -95,12 +95,11 @@ colors = {
 PALETTES = {
     # Red Coded
     'Sunset': ['Hot Pink', 'Tangerine'],
-    'Flame': ['Red', 'Yellow'],
+    'Flame': ['Red', 'Tangerine'],
     'Medal': ['Silver', 'Gold'],
 
     # Blue Coded
-    'Arctic': ['White', 'Cyan'],
-    'Ocean': ['Blue', 'Cyan'],
+    'The Deep': ['Blue', 'Deep Green'],
     'Mint': ['Electric Blue', 'Spring Green'],
     'Gender Reveal Party': ['Aqua', 'Pink'],
 
@@ -112,6 +111,7 @@ PALETTES = {
     'Knulli': ['Knulli Dark Green', 'Knulli Light Green'],
     'Knulli Silver': ['Knulli Light Green', 'Silver'],
     'Spring Meadow': ['Spring Green', 'Yellow'],
+    'Forrest': ['Lime Green', 'Deep Green'],
     
     # Fun & Sweet
     #'Cotton Candy': ['Pink', 'Sky Blue'],
@@ -124,10 +124,11 @@ PALETTES = {
     'Royal': ['Violet', 'Gold'],
 
     # Haze
-    #'Mint': ['Silver', 'Mint'],
-    'Blue Haze': ['Sky Blue', 'PBlue'], #cool dark palette
-    'Purple Haze': ['Amethyst', 'Deep Purple'], # small diff
-    'Fuchsia Haze': ['Amethyst', 'Fuchsia'], # small diff
+    #'Mint': ['Silver', 'Mint'],v
+    #'Arctic': ['White', 'Cyan'],
+    #'Blue Haze': ['Sky Blue', 'PBlue'], #cool dark palette
+    #'Purple Haze': ['Amethyst', 'Deep Purple'], # small diff
+    #'Fuchsia Haze': ['Amethyst', 'Fuchsia'], # small diff
 }
 
 def get_palette(S:str) -> list[Color]:

@@ -62,7 +62,7 @@ class Device:
             if zone_config['type'] == 'Line':
                 self.Z.Lines.append(LineZone(self, zone_config))
             if zone_config['type'] == 'Led':
-                self.Z.Leds.append(LineZone(self, zone_config))
+                self.Z.Leds.append(RawZone(self, zone_config))
 
         self.A = self.Z.Leds + self.Z.Lines + self.Z.Rings
 
@@ -142,7 +142,7 @@ class RawZone:
         self._dev = dev
         self._ind = zone_config['led_indexes']
         self.COUNT = zone_config['leds']
-        self.PAL_ID = zone_config.get('secondary', 0)
+        self.PAL_ID:int = zone_config.get('secondary', 0)
         self.COUNT_2_F = self.COUNT // 2
         self.COUNT_2_C = (self.COUNT + 1) // 2
         self.POS = zone_config.get('pos', [0, 0])

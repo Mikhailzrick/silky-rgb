@@ -3,7 +3,7 @@ from ...device import Device
 from ...utilities import dimm, easeOutQuart
 
 _metadata = {
-    'name': 'Notification Round',
+    'name': 'Notification Fill',
     'reqs': [],
     'duration': 30
 }
@@ -24,6 +24,17 @@ class Effect(BaseEffect):
                     z[x] = c
                 elif td - 40 <= z.ANGLES[x] < td:
                     __p = ((z.ANGLES[x] - td) / 40) % 1
+                    z[x] = dimm(c, 1-__p)
+                else:
+                    z[x] = [0,0,0]
+        for z in self.dev.Z.Lines:
+            _p = easeOutQuart(t/40) if t<30 else 1
+            for x in range(z.COUNT):
+                td = _p * 110
+                if z.PERCENTAGE[x] < td - 10:
+                    z[x] = c
+                elif td - 10 <= z.PERCENTAGE[x] < td:
+                    __p = ((z.PERCENTAGE[x] - td) / 40) % 1
                     z[x] = dimm(c, 1-__p)
                 else:
                     z[x] = [0,0,0]
