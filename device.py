@@ -1,6 +1,8 @@
 import json
 import os
 from importlib import import_module
+from typing import Sequence
+from .utilities import Numeric
 
 def identify_device():
     board = ""
@@ -60,7 +62,7 @@ class Device:
             if zone_config['type'] == 'Line':
                 self.Z.Lines.append(LineZone(self, zone_config))
             if zone_config['type'] == 'Led':
-                self.Z.Leds.append(LineZone(self, zone_config))
+                self.Z.Leds.append(RawZone(self, zone_config))
 
         self.A = self.Z.Leds + self.Z.Lines + self.Z.Rings
 
@@ -116,14 +118,14 @@ class Device:
     def close(self) -> None:
         self.driver.close()
     
-    def __getitem__(self, index) -> list[float]:
+    def __getitem__(self, index) -> Sequence[float]:
         return [
             self.FB0[index*3],
             self.FB0[index*3+1],
             self.FB0[index*3+2]
         ]
     
-    def __setitem__(self, index:int, c:list[float]):
+    def __setitem__(self, index:int, c:Sequence[float]):
         self.FB0[index*3] = c[0]
         self.FB0[index*3+1] = c[1]
         self.FB0[index*3+2] = c[2]
@@ -140,9 +142,10 @@ class RawZone:
         self._dev = dev
         self._ind = zone_config['led_indexes']
         self.COUNT = zone_config['leds']
-        self.PAL_ID = zone_config.get('secondary', 0)
+        self.PAL_ID:int = zone_config.get('secondary', 0)
         self.COUNT_2_F = self.COUNT // 2
-        self.COUNT_2_C = self.COUNT // 2 + 1
+        self.COUNT_2_C = (self.COUNT + 1) // 2
+        self.POS = zone_config.get('pos', [0, 0])
     
     def all(self, c) -> None:
         for index in self._ind: 
@@ -150,14 +153,14 @@ class RawZone:
             self._dev.FB0[index*3+1] = c[1]
             self._dev.FB0[index*3+2] = c[2]
     
-    def __getitem__(self, index) -> list[float]:
+    def __getitem__(self, index) -> Sequence[float]:
         return [
             self._dev.FB0[index*3],
             self._dev.FB0[index*3+1],
             self._dev.FB0[index*3+2]
         ]
     
-    def __setitem__(self, index:int, c:list[float]) -> None:
+    def __setitem__(self, index:int, c:Sequence[Numeric]) -> None:
         self._dev.FB0[self._ind[index]*3] = c[0]
         self._dev.FB0[self._ind[index]*3+1] = c[1]
         self._dev.FB0[self._ind[index]*3+2] = c[2]
@@ -165,6 +168,10 @@ class RawZone:
 class LineZone(RawZone):
     def __init__(self, dev:Device, zone_config):
         super().__init__(dev, zone_config)
+        if 'led_percentage' not in zone_config: 
+            self.PERCENTAGE = [i/self.COUNT*100 for i in range(len(self._ind))]
+        else:
+            self.PERCENTAGE = zone_config['led_percentage']
 
 class RingZone(RawZone):
     def __init__(self, dev:Device, zone_config):
@@ -173,5 +180,7 @@ class RingZone(RawZone):
             self.ANGLES = [i/self.COUNT*360 for i in range(len(self._ind))]
         else:
             self.ANGLES = zone_config['led_angles']
+        
+        self.PERCENTAGE = [i/3.6 for i in self.ANGLES]
 
         

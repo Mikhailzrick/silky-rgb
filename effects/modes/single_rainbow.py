@@ -1,9 +1,10 @@
 from .._base_effect import BaseEffect
 from ...device import Device
+from ...utilities import color_upscale, hsv_fl
 
 _metadata = {
-    'order': 100,
-    'name': 'No Effect',
+    'order': 21,
+    'name': 'Single Rainbow',
     'reqs': []
 }
 
@@ -12,8 +13,8 @@ class Effect(BaseEffect):
         super().__init__(dev, initial_tick)
     
     def apply(self, t, palettes):
-        for z in self.dev.A:
-            self.dev.Raw.all([0,0,0])
+        key = (t / 600) % 1
+        self.dev.Raw.all(color_upscale(hsv_fl((key) % 1, 1, 0.5)))
     
     def framekey(self, t):
-        return 0
+        return (t / 600) % 1

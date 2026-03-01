@@ -1,6 +1,6 @@
+from .._base_effect import BaseEffect
 from math import sqrt
 from ...colors import Color
-from ...effects._base_effect import BaseEffect
 from ...device import Device
 from ...utilities import Numeric, dimm, easeOutQuart, generate_brightness_list, mix
 
@@ -30,7 +30,7 @@ class Effect(BaseEffect):
                     else:
                         z[x] = [0,0,0]
         
-            for z in self.dev.Z.Leds:
+            for z in self.dev.Z.Leds + self.dev.Z.Lines:
                 z.all(c)
         elif t < 140:
             t = t-30
@@ -45,22 +45,34 @@ class Effect(BaseEffect):
                 _p = 1 - (t-90) / 20
                 c1 = mix([0,0,0], 1-_p, c1, _p)
                 c2 = mix([0,0,0], 1-_p, c2, _p)
-            td = -1*(t * 400)**0.75
-            for z in self.dev.Z.Rings:
+            td = -1*(t * 110)**0.75
+            for z in self.dev.Z.Rings + self.dev.Z.Lines:
                 for x in range(z.COUNT):
-                    ag = (td + z.ANGLES[x]) % 360
-                    if ag <= 140:
+                    ag = (td + z.PERCENTAGE[x]) % 100
+                    if ag <= 40:
                         z[x] = c1
-                    elif ag < 180:
-                        __p = ((ag - 140) / 40) % 1
+                    elif ag < 50:
+                        __p = ((ag - 40) / 10) % 1
                         z[x] = mix(c2, __p, c1, 1-__p)
-                    elif ag < 320:
+                    elif ag < 90:
                         z[x] = c2
                     else:
-                        __p = ((ag - 320) / 40) % 1
+                        __p = ((ag - 90) / 10) % 1
                         z[x] = mix(c1, __p, c2, 1-__p)
+            for z in self.dev.Z.Leds:
+                ag = (td) % 100 if z.PAL_ID == 0 else 99 - (td) % 100
+                if ag <= 25:
+                    z.all(c1)
+                elif ag < 50:
+                    __p = ((ag - 25) / 25) % 1
+                    z.all(mix(c2, __p, c1, 1-__p))
+                elif ag < 75:
+                    z.all(c2)
+                else:
+                    __p = ((ag - 75) / 25) % 1
+                    z.all(mix(c1, __p, c2, 1-__p))
         else:
             self.dev.Raw.all([0,0,0])
     
     def framekey(self, t):
-        return t
+        return None

@@ -166,7 +166,7 @@ class RGBState:
 
         if not self._idle:
             conf_done = self.smooth_conf()
-            if conf_done and not self._idle:
+            if conf_done and not self._idle and len(self.modes) == 1:
                 self._idle = True
                 print('[render] Entered IDLE')
             #print("Idle", self._idle)
@@ -223,7 +223,7 @@ class RGBState:
             self._target_sc = MAX_BR
     
     def apply_brightness(self):
-        self.DEV.BR = self._tr*self._br*self._br*self._br*self._sc / (100**5)
+        self.DEV.BR = self._tr*self._tr*self._br*self._br*self._sc / (100**5)
 
     def smooth_conf(self):
 
@@ -233,11 +233,15 @@ class RGBState:
             done = self._palette[i].paintdrop(self._target_palette[i]) and done
         
         if self._br != self._target_br:
-            self._br += -1 if self._target_br < self._br else 1
+            self._br += -2 if self._target_br < self._br else 2
+            if abs(self._br - self._target_br) < 2:
+                self._br = self._target_br
             done = False
 
         if self._sc != self._target_sc:
-            self._sc += -1 if self._target_sc < self._sc else 1
+            self._sc += -5 if self._target_sc < self._sc else 5
+            if abs(self._sc - self._target_sc) < 5:
+                self._sc = self._target_sc
             done = False
 
         if self._tr != self._target_tr:

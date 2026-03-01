@@ -1,8 +1,9 @@
-from ...effects._base_effect import BaseEffect
+from .._base_effect import BaseEffect
 from ...device import Device
 from random import randint
 
 _metadata = {
+    'order': 40,
     'name': 'Glitch',
     'reqs': []
 }
@@ -21,7 +22,7 @@ class Effect(BaseEffect):
             for x in range(z.COUNT):
                 if self._t[i] == 0:
                     z.all([0,0,0])
-                elif self._t[i*x % 300] == 1:
+                elif self._t[(i+(x+1)*13+(z.POS[0]+1)*(z.POS[1]+1)) % 300] == 1:
                     z[x] = p.fg
                 else:
                     z[x] = p.bg

@@ -10,48 +10,48 @@
         "top_middle": {
             "type": "Line",
             "leds": 8,
-            "pos": [0, 0],
+            "pos": [0, 4],
             "led_indexes": [0, 1, 2, 3, 4, 5, 6, 7]
         },
         "select": {
             "type": "Led",
             "leds": 1,
-            "pos": [9, 0],
-            "led_indexes": [8]
+            "pos": [12, 6],
+            "led_indexes": [9]
         },
         "start": {
             "type": "Led",
             "secondary": 1,
             "leds": 1,
-            "pos": [9, 0],
-            "led_indexes": [9]
+            "pos": [12, 10],
+            "led_indexes": [8]
         },
-        "shoulder1": {
+        "l1": {
             "type": "Led",
             "secondary": 1,
             "leds": 1,
-            "pos": [9, 0],
+            "pos": [9, 2],
             "led_indexes": [10]
         },
-        "shoulder2": {
+        "l2": {
             "type": "Led",
             "secondary": 1,
             "leds": 1,
-            "pos": [9, 0],
+            "pos": [9, 5],
             "led_indexes": [11]
         },
-        "shoulder3": {
+        "r2": {
             "type": "Led",
             "secondary": 1,
             "leds": 1,
-            "pos": [9, 0],
+            "pos": [9, 11],
             "led_indexes": [12]
         },
-        "shoulder4": {
+        "r1": {
             "type": "Led",
             "secondary": 1,
             "leds": 1,
-            "pos": [9, 0],
+            "pos": [9, 14],
             "led_indexes": [13]
         }
     }

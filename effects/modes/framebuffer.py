@@ -1,10 +1,11 @@
-from ...effects._base_effect import BaseEffect
+from .._base_effect import BaseEffect
 from ...device import Device
 import os
 
 _metadata = {
+    'order': 50,
     'name': 'Screen Aura',
-    'reqs': []
+    'reqs': ['dev']
 }
 
 def calc_seek(x, y, res):

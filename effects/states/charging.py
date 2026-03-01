@@ -28,33 +28,34 @@ class Effect(BaseEffect):
         if t < 0:
             self.dev.Raw.all([0,0,0])
         else:
-            for z in self.dev.Z.Rings:
-                _p = easeOutQuart((t) / 40) if t <= 30 else 1
+            for z in self.dev.Z.Rings + self.dev.Z.Lines:
+                _p = easeOutQuart((t/4) / 10) if t <= 30 else 1
                 for x in range(z.COUNT):
-                    td = _p * 400
-                    if z.ANGLES[x] <= td - 40:
+                    td = _p * 110
+                    if z.PERCENTAGE[x] <= td - 10:
                         z[x] = bg
-                    elif td - 40 <= z.ANGLES[x] < td:
-                        __p = ((z.ANGLES[x] - td) / 40) % 1
+                    elif td - 10 <= z.PERCENTAGE[x] < td:
+                        __p = ((z.PERCENTAGE[x] - td) / 10) % 1
                         z[x] = dimm(bg, 1-__p)
                     else:
                         z[x] = [0,0,0]
 
             fg = palette.fg
             if t >= 5:
-                for z in self.dev.Z.Rings:
-                    _p = easeOutQuart(((t-5)) / 60) * pct / 100 if t < 65 else pct / 100
+                for z in self.dev.Z.Rings + self.dev.Z.Lines:
+                    _p = easeOutQuart(((t-5)) / 60) * pct / 100 if t < 100 else pct / 100
                     for x in range(z.COUNT):
-                        td = _p * 400
-                        fg1 = dimm(fg, sin100_(-(t-6)*3 + int(z.ANGLES[x]/3.6))**10*0.6 + 0.4)
-                        if z.ANGLES[x] <= td - 40:
+                        td = _p * 110
+                        fg1 = dimm(fg, sin100_(-(t-6)*3 + int(z.PERCENTAGE[x]))**10*0.6 + 0.4)
+                        if z.PERCENTAGE[x] <= td - 10:
                             z[x] = fg1
-                        elif td - 40 <= z.ANGLES[x] < td:
-                            __p = ((z.ANGLES[x] - td) / 40) % 1
+                        elif td - 10 <= z.PERCENTAGE[x] < td:
+                            __p = ((z.PERCENTAGE[x] - td) / 10) % 1
                             z[x] = mix(fg1, 1-__p, bg, __p)
             
             for z in self.dev.Z.Leds:
-                z.all(bg)
+                _p = easeOutQuart((t/4) / 10) if t <= 30 else 1
+                z.all(dimm(bg, _p))
     
     def framekey(self, t):
         return None
