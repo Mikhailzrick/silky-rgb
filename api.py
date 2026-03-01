@@ -1,5 +1,5 @@
 from .bottle import run, route, get, request
-from .colors import AMBER, BLUE, GREEN, PALETTES, RED, WHITE, Palette
+from .colors import AMBER, BLUE, GREEN, COLORS, PALETTES, RED, WHITE, Palette
 from .confloader import CONFIG, conf_map, read_config_knulli, set_option
 from .effects.effect_store import MODES, NOTIS
 from .state import RGBState, Event, EventType
@@ -211,7 +211,19 @@ def get_palettes():
     p = {}
     for k, v1 in PALETTES.items():
         p[k] = {
-            "name": f"{k} ({v1[0]}, {v1[1]})"
+            "name": f"{k}",
+            "color.primary": v1[0],
+            "color.secondary": v1[1]
+        }
+
+    return dumps(p, indent=4)+"\n"
+
+@get("/get-colors")
+def get_colors():
+    p = {}
+    for k, v1 in COLORS.items():
+        p[k] = {
+            "name": f"{k}"
         }
 
     return dumps(p, indent=4)+"\n"
