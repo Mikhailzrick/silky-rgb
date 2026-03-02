@@ -46,6 +46,7 @@ This section handles triggering effects and discovering available animations/col
 * **GET** `/get-modes˙`: Retrieves available continuous animation modes.  
 * **GET** `/get-animations`: Retrieves available temporary notification effects.  
 * **GET** `/get-palettes`: Retrieves available named color palettes.
+* **GET** `/get-colors`: Retrieves available named colors.
 
 #### Device Status Updates
 
