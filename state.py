@@ -1,6 +1,6 @@
 from enum import Enum
 import json
-from .colors import BLACK, BLUE, GREEN, RED, WHITE, PALETTES, Palette, get_palette
+from .colors import BLACK, BLUE, COLORS, GREEN, RED, WHITE, PALETTES, Palette, get_palette
 from .device import Device
 from .effects.effect_store import MODES, NOTIS, STATES
 from .effects._base_effect import BaseEffect
@@ -200,19 +200,23 @@ class RGBState:
 
         self._target_br = 40 + int(CONFIG['brightness'] * 0.6) 
 
-        raw_palette = get_palette('-'.join(PALETTES[CONFIG['palette']]))
+        raw_palette = [[0,0,0], [0,0,0]]
+        if CONFIG['color.palette'] is not None:
+            raw_palette = get_palette('-'.join(PALETTES[CONFIG['color.palette']]))
+        if CONFIG['color.primary'] is not None:
+            raw_palette[0] = COLORS[CONFIG['color.primary']]
+        if CONFIG['color.secondary'] is not None:
+            raw_palette[1] = COLORS[CONFIG['color.secondary']]
         self._target_palette = [Palette(*raw_palette), Palette(*raw_palette)]
-        if CONFIG['palette.invert']:
-            self._target_palette = [p.swap() for p in self._target_palette]
-        if CONFIG['palette.invert.secondary']:
+        if CONFIG['color.invert.secondary']:
             self._target_palette[1] = self._target_palette[1].swap()
-        if CONFIG['palette.mod'] == 'twilight':
+        if CONFIG['color.mod'] == 'twilight':
             self._target_palette[0].bg = [.0,.0,.0]
             self._target_palette[1].bg = [.0,.0,.0]
-        if CONFIG['palette.mod'] == 'sparkle':
+        if CONFIG['color.mod'] == 'sparkle':
             self._target_palette[0].fg = mix([1.0,1.0,1.0], 0.7, self._target_palette[0].bg, 0.3)
             self._target_palette[1].fg = mix([1.0,1.0,1.0], 0.7, self._target_palette[1].bg, 0.3)
-        if CONFIG['palette.mod'] == 'haze':
+        if CONFIG['color.mod'] == 'haze':
             self._target_palette[0].bg = mix([.7,.7,.7], 0.7, self._target_palette[0].fg, 0.2)
             self._target_palette[1].bg = mix([.7,.7,.7], 0.7, self._target_palette[1].fg, 0.2)
         if not CONFIG['brightness.adaptive']:

@@ -52,7 +52,7 @@ AMBER = Palette([1,0.8,0])
 WHITE = Palette([1,1,1])
 BLACK = Palette([0,0,0])
 
-colors = {
+COLORS = {
     # Original Set
     'Cyan': [0.0, 0.7843, 0.7843],
     'Aqua': [0.1, 0.6, 0.92],
@@ -135,11 +135,11 @@ def get_palette(S:str) -> list[Color]:
     colors_ = S.split("-")
     if(len(colors_) == 1):
         c1 = colors_[0]
-        ret = [colors[c1], colors[c1]]
+        ret = [COLORS[c1], COLORS[c1]]
         return ret
     if(len(colors_) == 2):
         c1 = colors_[0]
         c2 = colors_[1]
-        ret = [colors[c1], colors[c2]]
+        ret = [COLORS[c1], COLORS[c2]]
         return ret
     return [[0,0,0], [0,0,0]]

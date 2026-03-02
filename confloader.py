@@ -1,7 +1,7 @@
 import os
 import re
 
-from .colors import PALETTES, get_palette
+from .colors import COLORS, PALETTES
 from .effects.effect_store import MODES
 
 CONFIG = {
@@ -9,10 +9,11 @@ CONFIG = {
     "mode": "shimmer",
     "brightness": 100,
     "brightness.adaptive": False,
-    "palette": "Knulli",
-    "palette.mod": 'none',
-    "palette.invert": False,
-    "palette.invert.secondary": False,
+    "color.palette": "Knulli",
+    "color.primary": None,
+    "color.secondary": None,
+    "color.mod": 'none',
+    "color.invert.secondary": False,
     "retroachievements": True,
     "battery.low": "continuous",
     "battery.low.threshold": 20,
@@ -30,17 +31,20 @@ conf_map = {
     "brightness.adaptive": {
         "type": "bool"
     },
-    "palette": {
+    "color.palette": {
         "type": "string"
     },
-    "palette.mod": {
+    "color.primary": {
+        "type": "string"
+    },
+    "color.secondary": {
+        "type": "string"
+    },
+    "color.mod": {
         "type": "enum",
         "values": ["none", "twilight", "sparkle", "haze"]
     },
-    "palette.invert": {
-        "type": "bool"
-    },
-    "palette.invert.secondary": {
+    "color.invert.secondary": {
         "type": "bool",
         "reqs": ['has_secondary']
     },
@@ -82,9 +86,17 @@ def set_option(key:str, val:str):
             if val in MODES:
                 CONFIG["mode"] = val
 
-        if key == "palette":
+        if key == "color.palette":
             if val in PALETTES:
-                CONFIG["palette"] = val
+                CONFIG["color.palette"] = val
+
+        if key == "color.primary":
+            if val in COLORS:
+                CONFIG["color.primary"] = val
+
+        if key == "color.secondary":
+            if val in COLORS:
+                CONFIG["color.secondary"] = val
 
         if key == "brightness":
             if val.isnumeric() and bounds(int(val), conf_map['brightness']['range']):
@@ -93,15 +105,12 @@ def set_option(key:str, val:str):
         if key == "brightness.adaptive":
             CONFIG["brightness.adaptive"] = val == '1'
 
-        if key == "palette.invert":
-            CONFIG["palette.invert"] = val == '1'
+        if key == "color.mod":
+            if val in conf_map['color.mod']['values']:
+                CONFIG["color.mod"] = val
 
-        if key == "palette.mod":
-            if val in conf_map['palette.mod']['values']:
-                CONFIG["palette.mod"] = val
-
-        if key == "palette.invert.secondary":
-            CONFIG["palette.invert.secondary"] = val == '1'
+        if key == "color.invert.secondary":
+            CONFIG["color.invert.secondary"] = val == '1'
 
         if key == "battery.charging":
             if val in conf_map['battery.charging']['values']:
