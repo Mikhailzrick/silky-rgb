@@ -9,12 +9,6 @@ from json import dumps
 
 STATE = RGBState.get()
 
-# If the driver has a sync method, we call it now to init the hardware state
-if "has_hw_modes" in STATE.DEV.TRAITS:
-    if hasattr(STATE.DEV.driver, "sync"):
-        print("Kickstarting Hardware State...")
-        STATE.DEV.driver.sync(STATE)
-
 presets = {
     'battery_charging': [
         Event(EventType.Notification, 'pulse', 3, GREEN),

@@ -1,9 +1,11 @@
 import os, time
 
 class RGBDriver:
+
     def __init__(self, extra: dict = None) -> None:
         # 'extra' is the 'driver_extra_params' dictionary from the JSON
         self.config = extra if extra is not None else {}
+        self._battery_trust_established = False
         
         # Pulling directly from the 'extra' dict
         self.PATH = self.config.get("hw_path")
@@ -12,8 +14,10 @@ class RGBDriver:
 
     def _set_sysfs(self, node, value):
         try:
+            # Force absolute integer, no floats, capped at 255
+            val = max(0, min(255, int(float(value))))
             with open(os.path.join(self.PATH, node), "w") as f:
-                f.write(str(value))
+                f.write(str(val))
         except Exception:
             pass
 
@@ -25,9 +29,23 @@ class RGBDriver:
         target_color = [255, 255, 255] # Fallback if palette isn't ready
 
         # 1. Get Battery Info
-        bat_pct = int(state.DEV.BATTERY.get('percentage', 0))
+        val = state.DEV.BATTERY.get('percentage')
+        try:
+            raw_pct = int(val) if val is not None else -1
+        except:
+            raw_pct = -1
+        # If the battery percentage is at 0 on launch, we consider the battery info to be untrustworthy
+        if raw_pct > 0:
+            self._battery_trust_established = True
+        if not self._battery_trust_established and raw_pct <= 0:
+            # While in this 'Limbo', we stay in "regular" mode
+            bat_pct = 100
+        else:
+            bat_pct = int(raw_pct)
         bat_status = state.DEV.BATTERY.get('state', 'Discharging')
         bat_map = self.config.get("battery_mapping", {})
+
+        print(f"DEBUG: Sync with state: mode={target_mode}, battery={bat_pct}%/{bat_status}")
 
         # Get the primary color from the selected palette
         try:
@@ -48,10 +66,13 @@ class RGBDriver:
                 target_mode, target_color = cfg["mode"], cfg["color"]
                 is_battery_alert = True
         elif bat_pct <= low_threshold:
-            is_battery_alert = True
-            cfg = bat_map.get("Critical") if bat_pct <= 10 else bat_map.get("Low")
-            if cfg:
-                target_mode, target_color = cfg["mode"], cfg["color"]
+            # Only check low/critical if NOT charging
+            if bat_pct <= 10:
+                cfg = bat_map.get("Critical")
+                if cfg: (target_mode, target_color, is_battery_alert) = (cfg["mode"], cfg["color"], True)
+            elif bat_pct <= 20:
+                cfg = bat_map.get("Low")
+                if cfg: (target_mode, target_color, is_battery_alert) = (cfg["mode"], cfg["color"], True)
 
         # Only set brightness to 0 if the mode is 'null' and no battery alert is active.
         if target_mode == "null" and not is_battery_alert:
@@ -64,13 +85,17 @@ class RGBDriver:
 
         # 3. Apply Brightness and Hardware IDs
         base_br = getattr(state, "_target_br", 100)
-        self._set_sysfs("led_level", int(base_br * 2.55))
+        brightness = int(float(base_br) * 2.55)
+        self._set_sysfs("led_level", brightness)
 
-        mode_data = self.HW_MODES.get(target_mode, self.HW_MODES.get("static", {"hw_id": 1, "hw_speed": 0}))
+        mode_data = self.HW_MODES.get(target_mode, self.HW_MODES.get("static", {"hw_id": 1, "hw_speed": 4}))
         hw_id = mode_data.get("hw_id", 1)
+        hw_speed = mode_data.get("hw_speed", 4)
         
         self._set_sysfs("led_mode", hw_id)
-        self._set_sysfs("led_speed", mode_data.get("hw_speed", 0))
+        self._set_sysfs("led_speed", hw_speed)
+
+        print(f"DEBUG: Applying settings -> Mode: {target_mode} (HW ID: {hw_id}), Speed: {hw_speed}, Brightness: {brightness}, Color: {target_color}")
 
         # 4. Final Color Write
         if hw_id not in [3, 4, 6]:
