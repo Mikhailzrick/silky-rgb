@@ -75,6 +75,13 @@ class RGBDriver:
         # 4. Final Color Write
         if hw_id not in [3, 4, 6]:
             r, g, b = target_color
+
+            # ALWAYS write these for Static Mode support
+            self._set_sysfs("custum_rgb_r", r)
+            self._set_sysfs("custum_rgb_g", g)
+            self._set_sysfs("custum_rgb_b", b)
+
+            # Standard RGB Nodes
             for i in ["1", "2"]:
                 self._set_sysfs(f"Led_rgb_r{i}", r)
                 self._set_sysfs(f"Led_rgb_g{i}", g)

@@ -21,7 +21,7 @@
       "static": {
         "name": "Static",
         "hw_id": 1,
-        "hw_speed": 0
+        "hw_speed": 4
       },
       "breathing": {
         "name": "Breathing",
@@ -31,12 +31,12 @@
       "monochrome_rainbow": {
         "name": "Monochrome Rainbow",
         "hw_id": 3,
-        "hw_speed": 0
+        "hw_speed": 1
       },
       "rainbow": {
         "name": "Rainbow",
         "hw_id": 4,
-        "hw_speed": 0
+        "hw_speed": 4
       },
       "input_pulse": {
         "name": "Input Pulse",
@@ -50,23 +50,23 @@
       },
       "null": {
         "name": "No Effect",
-        "hw_id": 1,
+        "hw_id": 0,
         "hw_speed": 0
       }
     },
     "battery_mapping": {
-        "Charging": {
-          "mode": "breathing",
-          "color": [0, 255, 0]
-        },
-        "Low": {
-          "mode": "breathing",
-          "color": [255, 255, 0]
-        },
-        "Critical": {
-          "mode": "breathing",
-          "color": [255, 0, 0]
-        }
+      "Charging": {
+        "mode": "breathing",
+        "color": [0, 255, 0]
+      },
+      "Low": {
+        "mode": "breathing",
+        "color": [255, 255, 0]
+      },
+      "Critical": {
+        "mode": "breathing",
+        "color": [255, 0, 0]
+      }
     }
   }
 }
