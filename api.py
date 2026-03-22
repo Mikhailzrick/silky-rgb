@@ -50,7 +50,7 @@ def reload_config():
     read_config_knulli()
     STATE.events.append(Event(EventType.LoadConfig))
     if hasattr(STATE.DEV.driver, "sync"):
-        STATE.DEV.driver.sync()
+        STATE.DEV.driver.sync(STATE)
     return ""
 
 @route("/set-config", method='POST')
@@ -68,6 +68,14 @@ def animation():
 
     for com in req:
         com2 = com.strip()
+        # If the driver has hardware-managed modes and this command corresponds to one, call it directly
+        if "has_hw_modes" in STATE.DEV.TRAITS:
+            method = getattr(STATE.DEV.driver, com2, None)
+            if callable(method):
+                # Call it and pass the state so it can sync back later
+                method(STATE)
+                continue # Move to the next command in the request
+        # Else, if not a hardware-managed mode, we expect a silky command
         if com2 in presets:
             run_preset_effect(com2)
         else:
@@ -156,7 +164,7 @@ def screen():
             print(f"[screen] [{STATE._sc}] -> [{STATE._target_sc}]")
             if hasattr(STATE.DEV.driver, "sync"):
                 # Force the driver to recalculate brightness based on this new target
-                STATE.DEV.driver.sync()
+                STATE.DEV.driver.sync(STATE)
             STATE.DEV.nuke_savestates()
             STATE._idle = False
 

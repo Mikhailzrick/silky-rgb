@@ -1,8 +1,5 @@
 import os, time
-from ..state import RGBState
 from ..confloader import CONFIG
-
-STATE = RGBState.get()
 
 class RGBDriver:
     def __init__(self, extra: dict = None) -> None:
@@ -20,7 +17,7 @@ class RGBDriver:
         except Exception:
             pass
 
-    def sync(self):
+    def sync(self, state):
         # 1. Pull the User's Threshold from knulli.conf
         try:
             low_threshold = int(CONFIG.get("battery.low.threshold", 20))
@@ -31,19 +28,19 @@ class RGBDriver:
         # Looking up 'battery_mapping' directly inside the 'extra' dict
         bat_map = self.config.get("battery_mapping", {})
         
-        target_mode = STATE.mode
-        target_color = STATE.color
+        target_mode = state.mode
+        target_color = state.color
         is_battery_alert = False
 
-        if STATE.battery_status == "Charging":
+        if state.battery_status == "Charging":
             cfg = bat_map.get("Charging")
             target_mode, target_color = cfg["mode"], cfg["color"]
             is_battery_alert = True
-        elif STATE.battery_percent <= 10:
+        elif state.battery_percent <= 10:
             cfg = bat_map.get("Critical")
             target_mode, target_color = cfg["mode"], cfg["color"]
             is_battery_alert = True
-        elif STATE.battery_percent <= low_threshold:
+        elif state.battery_percent <= low_threshold:
             cfg = bat_map.get("Low")
             target_mode, target_color = cfg["mode"], cfg["color"]
             is_battery_alert = True
@@ -55,10 +52,10 @@ class RGBDriver:
             return
 
         # 4. Handle LED Brightness
-        base_br = STATE.brightness 
+        base_br = state.brightness 
         
         if CONFIG.get('brightness.adaptive', False):
-            factor = STATE._target_sc / 100.0
+            factor = state._target_sc / 100.0
             final_br = base_br * factor
         else:
             final_br = base_br
@@ -89,9 +86,9 @@ class RGBDriver:
         # Bypassed by the render flag in device.py
         pass
 
-    def cheevo(self):
+    def cheevo(self, state):
         self._set_sysfs("led_mode", 4)
         self._set_sysfs("led_speed", 6)
         self._set_sysfs("led_set", 1)
         time.sleep(1.5)
-        self.sync()
+        self.sync(state)
