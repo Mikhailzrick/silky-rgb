@@ -49,6 +49,8 @@ def run_preset_effect(preset):
 def reload_config():
     read_config_knulli()
     STATE.events.append(Event(EventType.LoadConfig))
+    if hasattr(STATE.DEV.driver, "sync"):
+        STATE.DEV.driver.sync(STATE)
     return ""
 
 @route("/set-config", method='POST')
@@ -66,6 +68,14 @@ def animation():
 
     for com in req:
         com2 = com.strip()
+        # If the driver has hardware-managed modes and this command corresponds to one, call it directly
+        if "has_hw_modes" in STATE.DEV.TRAITS:
+            method = getattr(STATE.DEV.driver, com2, None)
+            if callable(method):
+                # Call it and pass the state so it can sync back later
+                method(STATE)
+                continue # Move to the next command in the request
+        # Else, if not a hardware-managed mode, we expect a silky command
         if com2 in presets:
             run_preset_effect(com2)
         else:
@@ -136,6 +146,10 @@ def battery():
         STATE.DEV.BATTERY['state'] = cur_state
         STATE.DEV.BATTERY['percentage'] = cur_pct
 
+        # If in hardware mode, sync the driver to apply any immediate changes
+        if hasattr(STATE.DEV.driver, "sync"):
+            STATE.DEV.driver.sync(STATE)
+
 @route("/update-screen-state", method='POST')
 def screen():
     req = request.body.read().decode() # pyright: ignore[reportAttributeAccessIssue]
@@ -152,11 +166,16 @@ def screen():
         if STATE._target_sc != cur_pct:
             STATE._target_sc = 16 + int(cur_pct * 0.84) if cur_pct > 0 else 0
             print(f"[screen] [{STATE._sc}] -> [{STATE._target_sc}]")
+            if hasattr(STATE.DEV.driver, "sync"):
+                # Force the driver to recalculate brightness based on this new target
+                STATE.DEV.driver.sync(STATE)
             STATE.DEV.nuke_savestates()
             STATE._idle = False
 
 @get("/kill")
 def kill():
+    if hasattr(STATE.DEV.driver, "onKill"):
+        STATE.DEV.driver.onKill()
     STATE.events.append(Event(EventType.FadeOut))
     #STATE.events.append(Event(EventType.Notification, 'blink_on', 1, WHITE))
     #STATE.events.append(Event(EventType.Notification, 'round_back', 1, WHITE))
@@ -178,6 +197,11 @@ def settings():
 
 @get("/get-modes")
 def get_modes():
+    # If the driver has hardware-managed modes, let's offer those
+    if "has_hw_modes" in STATE.DEV.TRAITS:
+        # We assume the driver has an HW_MODES dict as we planned
+        return dumps(STATE.DEV.driver.HW_MODES, indent=4) + "\n"
+    # Else, if not limited to hardware-managed modes let's offer silky modes!
     m = {}
     for k, v in MODES.items():
         add = True
@@ -193,6 +217,16 @@ def get_modes():
 
 @get("/get-animations")
 def get_anim():
+    # In case of a hardware-managed device with a cheevo mode, we want to hide all others
+    if "has_hw_modes" in STATE.DEV.TRAITS:
+        if hasattr(STATE.DEV.driver, "cheevo"):
+            return dumps({
+                "cheevo": {
+                    "name": "Notification Cheevo"
+                }
+            }, indent=4) + "\n"
+        else:
+            return dumps({}, indent=4) + "\n"
     m = {}
     for k, v in NOTIS.items():
         add = True
@@ -208,6 +242,9 @@ def get_anim():
 
 @get("/get-palettes")
 def get_palettes():
+    # If the device isn't marked as supporting dual colors, return empty
+    if "supports_dual_colors" not in STATE.DEV.TRAITS:
+        return dumps({}, indent=4) + "\n"
     p = {}
     for k, v1 in PALETTES.items():
         p[k] = {

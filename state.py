@@ -1,5 +1,6 @@
 from enum import Enum
 import json
+
 from .colors import BLACK, BLUE, COLORS, GREEN, RED, WHITE, PALETTES, Palette, get_palette
 from .device import Device
 from .effects.effect_store import MODES, NOTIS, STATES
@@ -221,6 +222,13 @@ class RGBState:
             self._target_palette[1].bg = mix([.7,.7,.7], 0.7, self._target_palette[1].fg, 0.2)
         if not CONFIG['brightness.adaptive']:
             self._target_sc = MAX_BR
+
+        # If the driver has a sync method, we call it now to init the hardware state
+        if "has_hw_modes" in self.DEV.TRAITS:
+            if hasattr(self.DEV.driver, "sync"):
+                print("Kickstarting Hardware State...")
+                self.DEV.driver.sync(self)
+
     
     def apply_brightness(self):
         self.DEV.BR = self._tr*self._tr*self._br*self._br*self._sc / (100**5)

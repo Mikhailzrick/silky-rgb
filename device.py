@@ -75,11 +75,20 @@ class Device:
             self.TRAITS.append('high_res')
         if len(list(filter(lambda a: "input" in a, self.CONFIG["zones"].values()))):
             self.TRAITS.append('has_input')
+        extra = self.CONFIG.get("driver_extra_params", {})
+        hw_modes = extra.get("hw_modes", {})
+
+        if isinstance(hw_modes, dict) and len(hw_modes) > 0:
+            # If the JSON defines hardware modes, we use them
+            self.TRAITS.append("has_hw_modes")
+        else:
+            # If not, this is a standard Silky-RGB software-rendered device
+            self.TRAITS.append("supports_silky_modes")
+            self.TRAITS.append("supports_dual_colors")
 
         print("\nCalculated Device Traits:")
         for i in self.TRAITS:
             print(f"    {i}")
-
 
     def savestate(self, key):
         self.CACHED_BYTESTREAM = self.render()
@@ -103,6 +112,9 @@ class Device:
         return False
 
     def render(self):
+        # If the config says hardware manages the LEDs, we don't calculate frames
+        if "has_hw_modes" in self.TRAITS:
+            return
         brc = self.BR*255+0.49
         return self.driver.render([int(a*a*brc) for a in self.FB0])
         
