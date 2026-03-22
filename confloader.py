@@ -32,17 +32,20 @@ conf_map = {
         "type": "bool"
     },
     "color.palette": {
-        "type": "string"
+        "type": "string",
+        "reqs": ['supports_dual_colors']
     },
     "color.primary": {
         "type": "string"
     },
     "color.secondary": {
-        "type": "string"
+        "type": "string",
+        "reqs": ['supports_dual_colors']
     },
     "color.mod": {
         "type": "enum",
-        "values": ["none", "twilight", "sparkle", "haze"]
+        "values": ["none", "twilight", "sparkle", "haze"],
+        "reqs": ['supports_silky_modes']
     },
     "color.invert.secondary": {
         "type": "bool",
