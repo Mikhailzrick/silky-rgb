@@ -34,7 +34,11 @@ class RGBDriver:
         bat_map = self.config.get("battery_mapping", {})
         bat_pct = state.DEV.BATTERY.get('percentage', 100)
         bat_status = state.DEV.BATTERY.get('state', 'Discharging')
-        target_mode = state._mode
+
+        raw_mode = state._mode
+        mode_data = self.HW_MODES.get(raw_mode)
+        if not mode_data:
+            mode_data = self.HW_MODES.get("static", {"hw_id": 1, "hw_speed": 0})
 
         # Determine the target color from the primary palette, converting from 0.0-1.0 to 0-255.
         try:
