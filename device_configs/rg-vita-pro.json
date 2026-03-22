@@ -1,0 +1,72 @@
+{
+  "driver": "anbernic_rg_vita_pro",
+  "leds": 2,
+  "zones": {
+    "left_stick": {
+      "type": "Led",
+      "leds": 1,
+      "pos": [5, 2],
+      "led_indexes": [0]
+    },
+    "right_stick": {
+      "type": "Led",
+      "leds": 1,
+      "pos": [5, 12],
+      "led_indexes": [1]
+    }
+  },
+  "driver_extra_params": {
+    "hw_path": "/sys/bus/platform/devices/singleadc-joypad",
+    "hw_modes": {
+      "static": {
+        "name": "Static",
+        "hw_id": 1,
+        "hw_speed": 0
+      },
+      "breathing": {
+        "name": "Breathing",
+        "hw_id": 2,
+        "hw_speed": 1
+      },
+      "monochrome_rainbow": {
+        "name": "Monochrome Rainbow",
+        "hw_id": 3,
+        "hw_speed": 0
+      },
+      "rainbow": {
+        "name": "Rainbow",
+        "hw_id": 4,
+        "hw_speed": 0
+      },
+      "input_pulse": {
+        "name": "Input Pulse",
+        "hw_id": 5,
+        "hw_speed": 4
+      },
+      "phantom": {
+        "name": "Phantom",
+        "hw_id": 6,
+        "hw_speed": 4
+      },
+      "null": {
+        "name": "No Effect",
+        "hw_id": 1,
+        "hw_speed": 0
+      }
+    },
+    "battery_mapping": {
+        "Charging": {
+          "mode": "breathing",
+          "color": [0, 255, 0]
+        },
+        "Low": {
+          "mode": "breathing",
+          "color": [255, 255, 0]
+        },
+        "Critical": {
+          "mode": "breathing",
+          "color": [255, 0, 0]
+        }
+    }
+  }
+}
