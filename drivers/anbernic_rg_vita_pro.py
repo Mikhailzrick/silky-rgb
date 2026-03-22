@@ -20,78 +20,59 @@ class RGBDriver:
     def sync(self, state):
         from ..confloader import CONFIG
 
-        # Enable RGB if it isn't already.
-        self._set_sysfs("led_switch", 1)
+        target_mode = state._mode
+        is_battery_alert = False
+        target_color = [255, 255, 255] # Fallback if palette isn't ready
 
-        # 1. Pull the User's Threshold from knulli.conf
-        try:
-            low_threshold = int(CONFIG.get("battery.low.threshold", 20))
-        except (ValueError, TypeError):
-            low_threshold = 20
-
-        # 2. Determine the Target State based on priority
-        # Looking up 'battery_mapping' directly inside the 'extra' dict
-        bat_map = self.config.get("battery_mapping", {})
-        bat_pct = state.DEV.BATTERY.get('percentage', 100)
+        # 1. Get Battery Info
+        bat_pct = int(state.DEV.BATTERY.get('percentage', 0))
         bat_status = state.DEV.BATTERY.get('state', 'Discharging')
+        bat_map = self.config.get("battery_mapping", {})
 
-        raw_mode = state._mode
-        mode_data = self.HW_MODES.get(raw_mode)
-        if not mode_data:
-            mode_data = self.HW_MODES.get("static", {"hw_id": 1, "hw_speed": 0})
-
-        # Determine the target color from the primary palette, converting from 0.0-1.0 to 0-255.
+        # Get the primary color from the selected palette
         try:
             primary_palette = state._target_palette[0]
-            # Convert the 0.0-1.0 floats back to 0-255 ints for sysfs
             target_color = [int(c * 255) for c in primary_palette.fg]
         except (AttributeError, IndexError, TypeError):
-            # Fallback to white if the palette isn't ready
-            target_color = [255, 255, 255]
+            pass 
 
-        is_battery_alert = False
+        # 2. Battery Alert Overwrites
+        try:
+            low_threshold = int(CONFIG.get("battery.low.threshold", 20))
+        except:
+            low_threshold = 20
 
         if bat_status == "Charging":
             cfg = bat_map.get("Charging")
-            target_mode, target_color = cfg["mode"], cfg["color"]
-            is_battery_alert = True
-        elif bat_pct <= low_threshold and bat_pct<= 10:
-            cfg = bat_map.get("Critical")
-            target_mode, target_color = cfg["mode"], cfg["color"]
-            is_battery_alert = True
+            if cfg:
+                target_mode, target_color = cfg["mode"], cfg["color"]
+                is_battery_alert = True
         elif bat_pct <= low_threshold:
-            cfg = bat_map.get("Low")
-            target_mode, target_color = cfg["mode"], cfg["color"]
             is_battery_alert = True
+            cfg = bat_map.get("Critical") if bat_pct <= 10 else bat_map.get("Low")
+            if cfg:
+                target_mode, target_color = cfg["mode"], cfg["color"]
 
-        # 3. Handle "No Effect" (null) override
+        # Only set brightness to 0 if the mode is 'null' and no battery alert is active.
         if target_mode == "null" and not is_battery_alert:
             self._set_sysfs("led_level", 0)
             self._set_sysfs("led_set", 1)
             return
-
-        # 4. Handle LED Brightness
-        base_br = getattr(state, "_target_br", 100) # The base level
-        factor = getattr(state, "_target_sc", 100) / 100.0 # The dimming scale
         
-        if CONFIG.get('brightness.adaptive', False):
-            final_br = base_br * factor
-        else:
-            final_br = base_br
+        # Enable RGB in any case.
+        self._set_sysfs("led_switch", 1)
 
-        # Convert 0-100 to 0-255 for the hardware
-        self._set_sysfs("led_level", int(final_br * 2.55))
+        # 3. Apply Brightness and Hardware IDs
+        base_br = getattr(state, "_target_br", 100)
+        self._set_sysfs("led_level", int(base_br * 2.55))
 
-        # 5. Mode & Speed Lookup
-        mode_data = self.HW_MODES.get(target_mode, self.HW_MODES.get("static", {}))
+        mode_data = self.HW_MODES.get(target_mode, self.HW_MODES.get("static", {"hw_id": 1, "hw_speed": 0}))
         hw_id = mode_data.get("hw_id", 1)
-        hw_speed = mode_data.get("hw_speed", 0)
-
-        # 6. Apply Hardware State
+        
         self._set_sysfs("led_mode", hw_id)
-        self._set_sysfs("led_speed", hw_speed)
+        self._set_sysfs("led_speed", mode_data.get("hw_speed", 0))
 
-        # 7. Apply Color (Skip for rainbow modes 3, 4, 6)
+        # 4. Final Color Write
         if hw_id not in [3, 4, 6]:
             r, g, b = target_color
             for i in ["1", "2"]:
