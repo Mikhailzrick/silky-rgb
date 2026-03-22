@@ -90,14 +90,6 @@ class Device:
         for i in self.TRAITS:
             print(f"    {i}")
 
-        # If the driver has a sync method, we call it now to init the hardware state
-        if hasattr(self.driver, "sync"):
-            from .state import RGBState
-            state = RGBState.get()
-            print("Initializing Hardware State...")
-            self.driver.sync(state)
-
-
     def savestate(self, key):
         self.CACHED_BYTESTREAM = self.render()
         self.CACHE[key] = self.CACHED_BYTESTREAM

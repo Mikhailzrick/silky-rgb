@@ -1,5 +1,4 @@
 import os, time
-from ..confloader import CONFIG
 
 class RGBDriver:
     def __init__(self, extra: dict = None) -> None:
@@ -9,6 +8,7 @@ class RGBDriver:
         # Pulling directly from the 'extra' dict
         self.PATH = self.config.get("hw_path")
         self.HW_MODES = self.config.get("hw_modes", {})
+        print(f"DEBUG: Driver initialized. Looking for hardware at: {self.PATH}")
 
     def _set_sysfs(self, node, value):
         try:
@@ -18,6 +18,11 @@ class RGBDriver:
             pass
 
     def sync(self, state):
+        from ..confloader import CONFIG
+
+        # Enable RGB if it isn't already.
+        self._set_sysfs("led_switch", 1)
+
         # 1. Pull the User's Threshold from knulli.conf
         try:
             low_threshold = int(CONFIG.get("battery.low.threshold", 20))
@@ -27,20 +32,30 @@ class RGBDriver:
         # 2. Determine the Target State based on priority
         # Looking up 'battery_mapping' directly inside the 'extra' dict
         bat_map = self.config.get("battery_mapping", {})
-        
-        target_mode = state.mode
-        target_color = state.color
+        bat_pct = state.DEV.BATTERY.get('percentage', 100)
+        bat_status = state.DEV.BATTERY.get('state', 'Discharging')
+        target_mode = state._mode
+
+        # Determine the target color from the primary palette, converting from 0.0-1.0 to 0-255.
+        try:
+            primary_palette = state._target_palette[0]
+            # Convert the 0.0-1.0 floats back to 0-255 ints for sysfs
+            target_color = [int(c * 255) for c in primary_palette.fg]
+        except (AttributeError, IndexError, TypeError):
+            # Fallback to white if the palette isn't ready
+            target_color = [255, 255, 255]
+
         is_battery_alert = False
 
-        if state.battery_status == "Charging":
+        if bat_status == "Charging":
             cfg = bat_map.get("Charging")
             target_mode, target_color = cfg["mode"], cfg["color"]
             is_battery_alert = True
-        elif state.battery_percent <= 10:
+        elif bat_pct <= low_threshold and bat_pct<= 10:
             cfg = bat_map.get("Critical")
             target_mode, target_color = cfg["mode"], cfg["color"]
             is_battery_alert = True
-        elif state.battery_percent <= low_threshold:
+        elif bat_pct <= low_threshold:
             cfg = bat_map.get("Low")
             target_mode, target_color = cfg["mode"], cfg["color"]
             is_battery_alert = True
@@ -52,16 +67,16 @@ class RGBDriver:
             return
 
         # 4. Handle LED Brightness
-        base_br = state.brightness 
+        base_br = getattr(state, "_target_br", 100) # The base level
+        factor = getattr(state, "_target_sc", 100) / 100.0 # The dimming scale
         
         if CONFIG.get('brightness.adaptive', False):
-            factor = state._target_sc / 100.0
             final_br = base_br * factor
         else:
             final_br = base_br
 
-        hw_brightness = int(final_br * 2.55)
-        self._set_sysfs("led_level", hw_brightness)
+        # Convert 0-100 to 0-255 for the hardware
+        self._set_sysfs("led_level", int(final_br * 2.55))
 
         # 5. Mode & Speed Lookup
         mode_data = self.HW_MODES.get(target_mode, self.HW_MODES.get("static", {}))
@@ -87,8 +102,13 @@ class RGBDriver:
         pass
 
     def cheevo(self, state):
+        self._set_sysfs("led_switch", 1)
         self._set_sysfs("led_mode", 4)
         self._set_sysfs("led_speed", 6)
         self._set_sysfs("led_set", 1)
         time.sleep(1.5)
         self.sync(state)
+    
+    def onKill(self):
+        self._set_sysfs("led_switch", 0)
+        self._set_sysfs("led_set", 1)

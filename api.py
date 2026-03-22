@@ -9,6 +9,12 @@ from json import dumps
 
 STATE = RGBState.get()
 
+# If the driver has a sync method, we call it now to init the hardware state
+if "has_hw_modes" in STATE.DEV.TRAITS:
+    if hasattr(STATE.DEV.driver, "sync"):
+        print("Kickstarting Hardware State...")
+        STATE.DEV.driver.sync(STATE)
+
 presets = {
     'battery_charging': [
         Event(EventType.Notification, 'pulse', 3, GREEN),
@@ -146,6 +152,10 @@ def battery():
         STATE.DEV.BATTERY['state'] = cur_state
         STATE.DEV.BATTERY['percentage'] = cur_pct
 
+        # If in hardware mode, sync the driver to apply any immediate changes
+        if hasattr(STATE.DEV.driver, "sync"):
+            STATE.DEV.driver.sync(STATE)
+
 @route("/update-screen-state", method='POST')
 def screen():
     req = request.body.read().decode() # pyright: ignore[reportAttributeAccessIssue]
@@ -170,6 +180,8 @@ def screen():
 
 @get("/kill")
 def kill():
+    if hasattr(STATE.DEV.driver, "onKill"):
+        STATE.DEV.driver.onKill()
     STATE.events.append(Event(EventType.FadeOut))
     #STATE.events.append(Event(EventType.Notification, 'blink_on', 1, WHITE))
     #STATE.events.append(Event(EventType.Notification, 'round_back', 1, WHITE))
