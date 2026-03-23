@@ -85,19 +85,6 @@ def bounds(val, bounds):
 
 def set_option(key:str, val:str):
     try:
-        if key == "mode":
-            # First check if it's a standard software-rendered mode
-            if val in MODES:
-                CONFIG["mode"] = val
-            else:
-                # If not, check if the current driver supports it as a Hardware Mode
-                from .state import RGBState
-                state = RGBState.get()
-                
-                # Check if the driver has HW_MODES and if the requested mode is in it
-                if hasattr(state.DEV.driver, 'HW_MODES'):
-                    if val in state.DEV.driver.HW_MODES:
-                        CONFIG["mode"] = val
 
         if key == "color.palette":
             if val in PALETTES:
@@ -110,6 +97,17 @@ def set_option(key:str, val:str):
         if key == "color.secondary":
             if val in COLORS:
                 CONFIG["color.secondary"] = val
+
+        if key == "mode":
+            if val in MODES:
+                CONFIG["mode"] = val
+            else:
+                # Keep the import scoped strictly to where it's used
+                from .state import RGBState
+                state = RGBState.get()
+                if hasattr(state.DEV.driver, 'HW_MODES'):
+                    if val in state.DEV.driver.HW_MODES:
+                        CONFIG["mode"] = val
 
         if key == "brightness":
             if val.isnumeric() and bounds(int(val), conf_map['brightness']['range']):
@@ -137,5 +135,6 @@ def set_option(key:str, val:str):
             if val.isnumeric() and bounds(int(val), conf_map['battery.low.threshold']['range']):
                 CONFIG["battery.low.threshold"] = int(val)
 
-    except:
-        pass
+    except Exception as e:
+        # Temporarily print the error so you can see if it's a circular import
+        print(f"DEBUG: set_option error: {e}")

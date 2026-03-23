@@ -49,8 +49,8 @@ class RGBDriver:
 
         # Get the primary color from the selected palette
         try:
-            primary_palette = state._target_palette[0]
-            target_color = [int(c * 255) for c in primary_palette.fg]
+            p = state._palette[0].bg 
+            target_color = [int(p[0] * 255), int(p[1] * 255), int(p[2] * 255)]
         except (AttributeError, IndexError, TypeError):
             pass 
 
