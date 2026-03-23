@@ -86,8 +86,18 @@ def bounds(val, bounds):
 def set_option(key:str, val:str):
     try:
         if key == "mode":
+            # First check if it's a standard software-rendered mode
             if val in MODES:
                 CONFIG["mode"] = val
+            else:
+                # If not, check if the current driver supports it as a Hardware Mode
+                from .state import RGBState
+                state = RGBState.get()
+                
+                # Check if the driver has HW_MODES and if the requested mode is in it
+                if hasattr(state.DEV.driver, 'HW_MODES'):
+                    if val in state.DEV.driver.HW_MODES:
+                        CONFIG["mode"] = val
 
         if key == "color.palette":
             if val in PALETTES:
