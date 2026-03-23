@@ -225,8 +225,16 @@ class RGBState:
 
         # If the driver has a sync method, we call it now to init the hardware state
         if "has_hw_modes" in self.DEV.TRAITS:
+            new_pal = Palette(raw_palette[0], raw_palette[1])
+            self._palette = [new_pal, new_pal]
+            
+            self._br = self._target_br
+            self._tr = MAX_BR
+            self.apply_brightness() 
+
             if hasattr(self.DEV.driver, "sync"):
-                print("Kickstarting Hardware State...")
+                # Debug print to verify state before calling driver
+                print(f"DEBUG State: BG={self._palette[0].bg}") 
                 self.DEV.driver.sync(self)
 
     
