@@ -126,7 +126,17 @@ class RGBState:
 
             if event.type == EventType.ChangeMode:
                 print(f"[state] ChangeMode [{event.payload}]")
-                self.modes[0] = MODES[event.payload]['class'](self.DEV, self._tick)
+                self._mode = event.payload
+
+                # 1. Check if it's a standard software mode
+                if event.payload in MODES:
+                    self.modes[0] = MODES[event.payload]['class'](self.DEV, self._tick)
+                
+                # 2. Check if it's a hardware-specific mode supported by the driver
+                elif hasattr(self.DEV.driver, 'HW_MODES') and event.payload in self.DEV.driver.HW_MODES:
+                    # Instantiate the HW mode class and put it in the active modes list
+                    self.modes[0] = MODES['static']['class'](self.DEV, self._tick)
+
                 self._tr = 0
                 self.events.pop(0)
                 self.DEV.nuke_savestates()

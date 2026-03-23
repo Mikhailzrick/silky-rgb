@@ -13,20 +13,26 @@ class RGBDriver:
         print(f"DEBUG: Driver initialized. Looking for hardware at: {self.PATH}")
 
     def _set_sysfs(self, node, value):
+        full_path = os.path.join(self.PATH, node)
         try:
-            # Force absolute integer, no floats, capped at 255
-            val = max(0, min(255, int(float(value))))
-            with open(os.path.join(self.PATH, node), "w") as f:
-                f.write(str(val))
-        except Exception:
-            pass
+            val = str(max(0, min(1023, int(float(value)))))
+            with open(full_path, "w") as f:
+                f.write(val + "\n")
+                f.flush() # Force it out of Python's memory
+            # print(f"DEBUG: Wrote {val} to {node}") # Check your logs for this!
+        except Exception as e:
+            # THIS IS THE SMOKING GUN:
+            print(f"ERROR writing to {node}: {e}")
 
     def sync(self, state):
         from ..confloader import CONFIG
 
         target_mode = state._mode
         is_battery_alert = False
-        target_color = [255, 255, 255] # Fallback if palette isn't ready
+
+        # Fallback colors if palette isn't ready
+        primary_rgb = [110, 255, 0] # Knulli green! :)
+        secondary_rgb = [0, 0, 0]
 
         # 1. Get Battery Info
         val = state.DEV.BATTERY.get('percentage')
@@ -49,8 +55,11 @@ class RGBDriver:
 
         # Get the primary color from the selected palette
         try:
-            p = state._palette[0].bg 
-            target_color = [int(p[0] * 255), int(p[1] * 255), int(p[2] * 255)]
+            c1 = state._palette[0].bg
+            c2 = state._palette[0].fg
+            
+            primary_rgb = [int(x * 255) for x in c1]
+            secondary_rgb = [int(x * 255) for x in c2]
         except (AttributeError, IndexError, TypeError):
             pass 
 
@@ -63,16 +72,16 @@ class RGBDriver:
         if bat_status == "Charging":
             cfg = bat_map.get("Charging")
             if cfg:
-                target_mode, target_color = cfg["mode"], cfg["color"]
+                target_mode, primary_rgb = cfg["mode"], cfg["color"]
                 is_battery_alert = True
         elif bat_pct <= low_threshold:
             # Only check low/critical if NOT charging
             if bat_pct <= 10:
                 cfg = bat_map.get("Critical")
-                if cfg: (target_mode, target_color, is_battery_alert) = (cfg["mode"], cfg["color"], True)
+                if cfg: (target_mode, primary_rgb, is_battery_alert) = (cfg["mode"], cfg["color"], True)
             elif bat_pct <= 20:
                 cfg = bat_map.get("Low")
-                if cfg: (target_mode, target_color, is_battery_alert) = (cfg["mode"], cfg["color"], True)
+                if cfg: (target_mode, primary_rgb, is_battery_alert) = (cfg["mode"], cfg["color"], True)
 
         # Only set brightness to 0 if the mode is 'null' and no battery alert is active.
         if target_mode == "null" and not is_battery_alert:
@@ -95,23 +104,58 @@ class RGBDriver:
         self._set_sysfs("led_mode", hw_id)
         self._set_sysfs("led_speed", hw_speed)
 
-        print(f"DEBUG: Applying settings -> Mode: {target_mode} (HW ID: {hw_id}), Speed: {hw_speed}, Brightness: {brightness}, Color: {target_color}")
+        print(f"DEBUG: Applying settings -> Mode: {target_mode} (HW ID: {hw_id}), Speed: {hw_speed}, Brightness: {brightness}, Primary Color: {primary_rgb}, Secondary Color: {secondary_rgb}")
 
-        # 4. Final Color Write
+        # 4. Apply colors if not a rainbow mode
         if hw_id not in [3, 4, 6]:
-            r, g, b = target_color
+            
+            # In case of static mode, set the "custum" color nodes,
+            # otherwise set the standard RGB nodes. This is based 
+            # on reverse-engineering and may need adjustments for
+            # different hardware versions.
+            if hw_id == 1:
+                self._set_sysfs("custum_rgb_r", primary_rgb[0])
+                self._set_sysfs("custum_rgb_g", primary_rgb[1])
+                self._set_sysfs("custum_rgb_b", primary_rgb[2])
+            elif hw_id == 5:
+                # Mode 5:
+                # Convert 0-255 (Additive) to 553-3 (Inverted)
+                def to_mode5(val):
+                    return int(round(553 - (float(val) * (550.0 / 255.0))))
+                self._set_sysfs("led_level", 255)
+                self._set_sysfs("led_sync_colour", 0)
 
-            # ALWAYS write these for Static Mode support
-            self._set_sysfs("custum_rgb_r", r)
-            self._set_sysfs("custum_rgb_g", g)
-            self._set_sysfs("custum_rgb_b", b)
+                # Standard Inverted 10-bit Math
+                def to_mode5(val):
+                    return int(round(553 - (float(val) * (550.0 / 255.0))))
+                
+                self._set_sysfs("led_sync_colour", 0)
+                self._set_sysfs("custum_rgb_r", 0)
+                self._set_sysfs("custum_rgb_g", 0)
+                self._set_sysfs("custum_rgb_b", 0)
 
-            # Standard RGB Nodes
-            for i in ["1", "2"]:
-                self._set_sysfs(f"Led_rgb_r{i}", r)
-                self._set_sysfs(f"Led_rgb_g{i}", g)
-                self._set_sysfs(f"Led_rgb_b{i}", b)
-        
+                # Pulse Color (Primary)
+                # Maps [110, 255, 0] -> 315, 3, 553
+                self._set_sysfs("Led_rgb_r1", to_mode5(primary_rgb[0]))
+                self._set_sysfs("Led_rgb_g1", to_mode5(primary_rgb[1]))
+                self._set_sysfs("Led_rgb_b1", to_mode5(primary_rgb[2]))
+
+                # Background Color (Secondary)
+                # Maps [20, 120, 5] -> 509, 294, 542
+                self._set_sysfs("Led_rgb_r2", to_mode5(secondary_rgb[0]))
+                self._set_sysfs("Led_rgb_g2", to_mode5(secondary_rgb[1]))
+                self._set_sysfs("Led_rgb_b2", to_mode5(secondary_rgb[2]))
+            else:
+                self._set_sysfs("custum_rgb_r", 0)
+                self._set_sysfs("custum_rgb_g", 0)
+                self._set_sysfs("custum_rgb_b", 0)
+                for i in ["1", "2"]:
+                    self._set_sysfs(f"Led_rgb_r{i}", primary_rgb[0])
+                    self._set_sysfs(f"Led_rgb_g{i}", primary_rgb[1])
+                    self._set_sysfs(f"Led_rgb_b{i}", primary_rgb[2])
+
+        # Very important! Must be set in any case to apply the changes,
+        # even if only brightness or mode changes without color changes!
         self._set_sysfs("led_set", 1)
 
     def write(self, data):
