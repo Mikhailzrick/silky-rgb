@@ -61,6 +61,12 @@ class RGBState:
                 print(f"[state] LoadConfig")
                 self.load_config()
                 self.events.pop(0)
+                if "has_hw_modes" in self.DEV.TRAITS and hasattr(self.DEV.driver, "sync"):
+                    # Force variables to target so the first frame isn't black/wrong
+                    self._br = self._target_br
+                    self._tr = MAX_BR 
+                    self.apply_brightness()
+                    self.DEV.driver.sync(self)
                 return True
             if event.type == EventType.Die:
                 print(f"[state] Die")
@@ -234,18 +240,20 @@ class RGBState:
             self._target_sc = MAX_BR
 
         # If the driver has a sync method, we call it now to init the hardware state
-        if "has_hw_modes" in self.DEV.TRAITS:
-            new_pal = Palette(raw_palette[0], raw_palette[1])
-            self._palette = [new_pal, new_pal]
+        if "has_hw_modes" in self.DEV.TRAITS: #
+            # 1. Update the actual palette used by the driver to the one we just calculated
+            self._palette = [self._target_palette[0], self._target_palette[1]] #
             
-            self._br = self._target_br
-            self._tr = MAX_BR
-            self.apply_brightness() 
+            # 2. Slam the brightness/scale to targets (bypassing smooth_conf)
+            self._br = self._target_br #
+            self._sc = self._target_sc #
+            self._tr = MAX_BR # Force transparency to 100% so it's not "fading in"
+            self.apply_brightness() #
 
-            if hasattr(self.DEV.driver, "sync"):
-                # Debug print to verify state before calling driver
-                print(f"DEBUG State: BG={self._palette[0].bg}") 
-                self.DEV.driver.sync(self)
+            # 3. Now sync the hardware while the variables are exactly where they need to be
+            if hasattr(self.DEV.driver, "sync"): #
+                print(f"[state] Hardware Sync: Mode={self._mode} BR={self._br}") #
+                self.DEV.driver.sync(self) #
 
     
     def apply_brightness(self):

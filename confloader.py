@@ -89,7 +89,8 @@ def set_option(key:str, val:str):
         if key == "color.palette":
             if val in PALETTES:
                 CONFIG["color.palette"] = val
-
+            elif val == 'Custom':
+                CONFIG["color.palette"] = None
         if key == "color.primary":
             if val in COLORS:
                 CONFIG["color.primary"] = val
@@ -99,16 +100,10 @@ def set_option(key:str, val:str):
                 CONFIG["color.secondary"] = val
 
         if key == "mode":
-            if val in MODES:
-                CONFIG["mode"] = val
-            else:
-                # Keep the import scoped strictly to where it's used
-                from .state import RGBState
-                state = RGBState.get()
-                if hasattr(state.DEV.driver, 'HW_MODES'):
-                    if val in state.DEV.driver.HW_MODES:
-                        CONFIG["mode"] = val
-
+            if not val in MODES:
+                print(f"Warning: Attempting to run nonexisting mode {val}.")
+            CONFIG["mode"] = val
+            
         if key == "brightness":
             if val.isnumeric() and bounds(int(val), conf_map['brightness']['range']):
                 CONFIG["brightness"] = int(val)
