@@ -84,7 +84,9 @@ class Device:
         else:
             # If not, this is a standard Silky-RGB software-rendered device
             self.TRAITS.append("supports_silky_modes")
-            self.TRAITS.append("supports_dual_colors")
+        
+        # Currently, all known devices support dual colors
+        self.TRAITS.append("supports_dual_colors")
 
         print("\nCalculated Device Traits:")
         for i in self.TRAITS:
