@@ -19,9 +19,7 @@ class RGBDriver:
             with open(full_path, "w") as f:
                 f.write(val + "\n")
                 f.flush() # Force it out of Python's memory
-            # print(f"DEBUG: Wrote {val} to {node}") # Check your logs for this!
         except Exception as e:
-            # THIS IS THE SMOKING GUN:
             print(f"ERROR writing to {node}: {e}")
 
     def sync(self, state):
@@ -135,16 +133,14 @@ class RGBDriver:
                 self._set_sysfs("custum_rgb_b", 0)
 
                 # Pulse Color (Primary)
-                # Maps [110, 255, 0] -> 315, 3, 553
-                self._set_sysfs("Led_rgb_r1", to_mode5(primary_rgb[0]))
-                self._set_sysfs("Led_rgb_g1", to_mode5(primary_rgb[1]))
-                self._set_sysfs("Led_rgb_b1", to_mode5(primary_rgb[2]))
+                self._set_sysfs("Led_rgb_r1", to_mode5(secondary_rgb[0]))
+                self._set_sysfs("Led_rgb_g1", to_mode5(secondary_rgb[1]))
+                self._set_sysfs("Led_rgb_b1", to_mode5(secondary_rgb[2]))
 
                 # Background Color (Secondary)
-                # Maps [20, 120, 5] -> 509, 294, 542
-                self._set_sysfs("Led_rgb_r2", to_mode5(secondary_rgb[0]))
-                self._set_sysfs("Led_rgb_g2", to_mode5(secondary_rgb[1]))
-                self._set_sysfs("Led_rgb_b2", to_mode5(secondary_rgb[2]))
+                self._set_sysfs("Led_rgb_r2", to_mode5(primary_rgb[0]))
+                self._set_sysfs("Led_rgb_g2", to_mode5(primary_rgb[1]))
+                self._set_sysfs("Led_rgb_b2", to_mode5(primary_rgb[2]))
             else:
                 self._set_sysfs("custum_rgb_r", 0)
                 self._set_sysfs("custum_rgb_g", 0)
