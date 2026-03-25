@@ -87,7 +87,7 @@ COLORS = {
     'Warm White': [1.0, 0.9608, 0.902],
     'Ice White': [0.902, 0.9804, 1.0],
     'Knulli Light Green': [0.43, 1.0, 0.0],
-    'Knulli Dark Green': [0.08, 0.47, 0.02],
+    'Knulli Golden Moss': [0.60, 0.85, 0.0],
 
     'Off': [0.0, 0.0, 0.0]
 }
@@ -108,7 +108,7 @@ PALETTES = {
     #'Scarlet Surge': ['Scarlet', 'Aqua'],
 
     # Green Coded
-    'Knulli': ['Knulli Dark Green', 'Knulli Light Green'],
+    'Knulli': ['Knulli Light Green', 'Knulli Golden Moss'],
     'Knulli Silver': ['Knulli Light Green', 'Silver'],
     'Spring Meadow': ['Spring Green', 'Yellow'],
     'Forrest': ['Lime Green', 'Deep Green'],
