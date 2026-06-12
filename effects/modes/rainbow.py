@@ -4,8 +4,8 @@ from ...utilities import color_upscale, hsv_fl
 
 _metadata = {
     'order': 20,
-    'name': 'Rainbow',
-    'reqs': ['high_res']
+    'name': 'Rainbow Wave',
+    'reqs': []
 }
 
 class Effect(BaseEffect):

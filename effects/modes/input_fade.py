@@ -4,8 +4,8 @@ from ...joystick import StickState
 from ...utilities import loop_d, mix, dimm
 
 _metadata = {
-    'order': 31,
-    'name': 'Input Pulse',
+    'order': 90,
+    'name': 'Joystick',
     'reqs': ['has_input']
 }
 
@@ -13,7 +13,7 @@ class Effect(BaseEffect):
     def __init__(self, dev: Device, initial_tick: int) -> None:
         super().__init__(dev, initial_tick)
         self.bg_scale = 0.7
-        self.ST = StickState(dev.CONFIG['zones'])
+        self.ST = StickState(dev.CONFIG)
         self.ZD = {r.ID: [0]*r.COUNT for r in self.dev.Z.Rings}
         self.leds = sum([r.COUNT for r in self.dev.Z.Rings])
         self.zeroes = 0
@@ -28,9 +28,9 @@ class Effect(BaseEffect):
                 d = (80 - abs(loop_d(r.ANGLES[x], s['angle'], 360))) / 80
                 if d > 0 and s['value'] > 0.3:
                     d2 = d * d * ((s['value']-0.3)/0.7)
-                    zd[x] = min(d*100, zd[x] + d2*30)
+                    zd[x] = min(d*100, zd[x] + d2*9)
                 else:
-                    zd[x] = max(0, zd[x]-3)
+                    zd[x] = max(0, zd[x]-9)
                     if zd[x] == 0:
                         self.zeroes += 1
     

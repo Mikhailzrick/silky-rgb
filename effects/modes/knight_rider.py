@@ -4,9 +4,9 @@ from ...device import Device
 from ...utilities import mix, dimm, sin100, sin100_
 
 _metadata = {
-    'order': 30,
+    'order': 50,
     'name': 'Knight Rider',
-    'reqs': ['device:trimui-brick']
+    'reqs': ['knight-rider']
 }
 
 class Effect(BaseEffect):
