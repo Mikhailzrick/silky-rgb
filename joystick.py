@@ -4,7 +4,6 @@ import struct
 import fcntl
 import array
 from math import sqrt, atan2, degrees
-from functools import lru_cache
 
 EV_ABS = 0x03
 
@@ -50,9 +49,8 @@ def get_abs_info(fd, axis):
     }
 
 
-@lru_cache(maxsize=1024)
 def calc_value(x, y):
-    return int(sqrt(x**2 + y**2))
+    return int(sqrt(x*x + y*y))
 
 
 def resolve_axis(axis):
@@ -189,18 +187,32 @@ class StickState:
             self.calc(e_code, value)
 
     def calc(self, id, value):
-        if id not in self._axis_cache:
+        cached = self._axis_cache.get(id)
+        if cached is None:
             return
 
-        stick, axis = self._axis_cache[id]
+        stick, axis = cached
+        state = self.__state[stick]
+        raw = state['raw']
 
-        self.__state[stick]['raw'][axis] = value if self.__state[stick]['polarity'][axis] == '+' else -value
+        if state['polarity'][axis] == '-':
+            value = -value
 
-        x, y = self.__state[stick]['raw']
+        if raw[axis] == value:
+            return
+
+        raw[axis] = value
+
+        x, y = raw
 
         raw_value = calc_value(x, y)
-        self.__state[stick]['angle'] = 180 - degrees(atan2(x, y))
-        self.__state[stick]['value'] = 1 if raw_value > 125 else raw_value / 125
+
+        if raw_value <= 2:
+            state['value'] = 0
+            return
+
+        state['angle'] = 180 - degrees(atan2(x, y))
+        state['value'] = 1 if raw_value > 125 else raw_value / 125
 
     def __getitem__(self, name: str) -> dict:
         return self.__state[name]
