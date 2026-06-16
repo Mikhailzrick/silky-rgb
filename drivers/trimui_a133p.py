@@ -9,17 +9,17 @@ class RGBDriver:
         self.RGB_ORDER = extra['rgb_order']
         self.PATCHTABLE:dict = {a: b for a,b in extra['patchtable']}
 
+        with open('/sys/class/led_anim/effect_enable', 'w') as _temp:
+            _temp.write('0')
         with open('/sys/class/led_anim/effect_rgb_hex_lr', 'w') as _temp:
             _temp.write('000000')
         with open('/sys/class/led_anim/effect_rgb_hex_m', 'w') as _temp:
             _temp.write('000000')
-        sleep(1)
+        sleep(0.1)
         with open('/sys/class/led/tg5040_exterme_brightness', 'w') as _temp:
             _temp.write('255')
         with open('/sys/class/led_anim/max_scale', 'w') as _temp:
             _temp.write('255')
-        with open('/sys/class/led_anim/effect_enable', 'w') as _temp:
-            _temp.write('0')
 
         self.rgb_sink = os.open('/sys/class/led_anim/frame', os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK) # type: ignore
 
