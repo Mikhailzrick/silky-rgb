@@ -5,7 +5,7 @@ from random import randint
 _metadata = {
     'order': 40,
     'name': 'Glitch',
-    'reqs': []
+    'reqs': ['dev']
 }
 
 class Effect(BaseEffect):

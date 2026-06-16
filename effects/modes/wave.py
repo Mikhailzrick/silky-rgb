@@ -3,7 +3,7 @@ from ...device import Device
 from ...utilities import mix, dimm, sin100
 
 _metadata = {
-    'order': 60,
+    'order': 15,
     'name': 'Wave',
     'reqs': []
 }

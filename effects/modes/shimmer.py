@@ -4,7 +4,7 @@ from ...utilities import dimm, mix, sin100
 from random import randint
 
 _metadata = {
-    'order': 10,
+    'order': 5,
     'name': 'Shimmer',
     'reqs': []
 }

@@ -41,7 +41,7 @@ class Palette():
             self.bg = [a for a in p2.bg]
             self.fg = [a for a in p2.fg]
         return True
-    
+
     def __str__(self) -> str:
         return f"P( {str(self.bg)} {str(self.fg)} )"
 
@@ -58,14 +58,12 @@ COLORS = {
     'Aqua': [0.1, 0.6, 0.92],
     'Magenta': [1.0, 0.0, 0.7059],
     'Green': [0.0, 1.0, 0.0],
-    'Blue': [0.0, 0.1961, 1.0],
-    'PBlue': [0.0, 0.0, 1.0],
+    'Blue': [0.0, 0.0, 1.0],
     'Violet': [0.2941, 0.0, 1.0],
     'Yellow': [1.0, 0.7843, 0.0],
     'Gold': [1.0, 0.75, 0.0],
     'Silver': [0.8, 0.8, 0.9],
-    'Red': [1.0, 0.0196, 0.0],
-    'PRed': [1.0, 0.0, 0.0],
+    'Red': [1.0, 0.0, 0.0],
     'Pink': [1.0, 0.4, 0.6],
     'White': [1.0, 1.0, 1.0],
     'Black': [0.0, 0.0, 0.0],
@@ -112,11 +110,11 @@ PALETTES = {
     'Knulli Silver': ['Knulli Light Green', 'Silver'],
     'Spring Meadow': ['Spring Green', 'Yellow'],
     'Forrest': ['Lime Green', 'Deep Green'],
-    
+
     # Fun & Sweet
     #'Cotton Candy': ['Pink', 'Sky Blue'],
     #'Bubblegum': ['Pink', 'Aqua'], # there are a few like this
-    
+
     # Vibrant
     'Orchid': ['Magenta', 'Violet'],
     'Cyberpunk': ['Fuchsia', 'Cyan'],

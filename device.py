@@ -38,8 +38,12 @@ class Device:
         self.TRAITS = []
         self.TRAITS.append('device:'+identify_device())
 
+        for trait in self.CONFIG.get('traits', []):
+            if trait not in self.TRAITS:
+                self.TRAITS.append(trait)
+
         self.nuke_savestates()
-    
+
         self.driver = RGBDriver(config.get('driver_extra_params', {})) # pyright: ignore[reportPossiblyUnboundVariable]
 
         self.Raw = RawZone(
@@ -84,7 +88,7 @@ class Device:
         else:
             # If not, this is a standard Silky-RGB software-rendered device
             self.TRAITS.append("supports_silky_modes")
-        
+
         # Currently, all known devices support dual colors
         self.TRAITS.append("supports_dual_colors")
 
@@ -96,7 +100,7 @@ class Device:
         self.CACHED_BYTESTREAM = self.render()
         self.CACHE[key] = self.CACHED_BYTESTREAM
         self.CACHE_LAST_KEY = key
-    
+
     def nuke_savestates(self):
         self.CACHE = {}
         self.CACHE_SKIP = False
@@ -119,7 +123,7 @@ class Device:
             return
         brc = self.BR*255+0.49
         return self.driver.render([int(a*a*brc) for a in self.FB0])
-        
+
     def write(self) -> None:
         bytestream = self.CACHED_BYTESTREAM
         if bytestream is None:
@@ -131,14 +135,14 @@ class Device:
 
     def close(self) -> None:
         self.driver.close()
-    
+
     def __getitem__(self, index) -> Sequence[float]:
         return [
             self.FB0[index*3],
             self.FB0[index*3+1],
             self.FB0[index*3+2]
         ]
-    
+
     def __setitem__(self, index:int, c:Sequence[float]):
         self.FB0[index*3] = c[0]
         self.FB0[index*3+1] = c[1]
@@ -160,20 +164,20 @@ class RawZone:
         self.COUNT_2_F = self.COUNT // 2
         self.COUNT_2_C = (self.COUNT + 1) // 2
         self.POS = zone_config.get('pos', [0, 0])
-    
+
     def all(self, c) -> None:
-        for index in self._ind: 
+        for index in self._ind:
             self._dev.FB0[index*3] = c[0]
             self._dev.FB0[index*3+1] = c[1]
             self._dev.FB0[index*3+2] = c[2]
-    
+
     def __getitem__(self, index) -> Sequence[float]:
         return [
             self._dev.FB0[index*3],
             self._dev.FB0[index*3+1],
             self._dev.FB0[index*3+2]
         ]
-    
+
     def __setitem__(self, index:int, c:Sequence[Numeric]) -> None:
         self._dev.FB0[self._ind[index]*3] = c[0]
         self._dev.FB0[self._ind[index]*3+1] = c[1]
@@ -182,7 +186,7 @@ class RawZone:
 class LineZone(RawZone):
     def __init__(self, dev:Device, zone_config):
         super().__init__(dev, zone_config)
-        if 'led_percentage' not in zone_config: 
+        if 'led_percentage' not in zone_config:
             self.PERCENTAGE = [i/self.COUNT*100 for i in range(len(self._ind))]
         else:
             self.PERCENTAGE = zone_config['led_percentage']
@@ -190,11 +194,11 @@ class LineZone(RawZone):
 class RingZone(RawZone):
     def __init__(self, dev:Device, zone_config):
         super().__init__(dev, zone_config)
-        if 'led_angles' not in zone_config: 
+        if 'led_angles' not in zone_config:
             self.ANGLES = [i/self.COUNT*360 for i in range(len(self._ind))]
         else:
             self.ANGLES = zone_config['led_angles']
-        
+
         self.PERCENTAGE = [i/3.6 for i in self.ANGLES]
 
-        
+

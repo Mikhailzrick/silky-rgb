@@ -3,8 +3,8 @@ from ...device import Device
 from ...utilities import color_upscale, hsv_fl
 
 _metadata = {
-    'order': 21,
-    'name': 'Single Rainbow',
+    'order': 10,
+    'name': 'Cycle Color',
     'reqs': []
 }
 

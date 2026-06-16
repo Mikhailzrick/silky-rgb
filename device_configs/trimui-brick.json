@@ -6,6 +6,7 @@
     },
     "leds": 14,
     "target_fps": 30,
+    "traits": ["knight-rider", "ambient"],
     "zones": {
         "top_middle": {
             "type": "Line",
