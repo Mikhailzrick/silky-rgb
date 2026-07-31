@@ -17,6 +17,7 @@ class Effect(BaseEffect):
         self.bg_scale = 0.7
         self.ST = StickState(dev.CONFIG)
         self.rings = self.dev.Z.Rings
+        self.all_zones = (list(self.dev.Z.Lines) + list(self.dev.Z.Rings) + list(self.dev.Z.Leds))
         self.ZD = {r.ID: [0]*r.COUNT for r in self.rings}
         self.leds = sum(r.COUNT for r in self.rings)
         self.zeroes = 0
@@ -95,6 +96,14 @@ class Effect(BaseEffect):
         bg_scale = self.bg_scale
         ZD = self.ZD
 
+        # Set every LED to the primary color
+        for zone in self.all_zones:
+            p = palettes[zone.PAL_ID]
+
+            for x in range(zone.COUNT):
+                zone[x] = p.bg
+
+        # Apply the joystick animation over the ring zones
         for r in self.rings:
             p = palettes[r.PAL_ID]
             zd = ZD[r.ID]
@@ -109,7 +118,7 @@ class Effect(BaseEffect):
                 else:
                     p_ = curve[z]
 
-                r[x] = mix(p.fg, p_, p.bg, bg_scale*(1-p_))
+                r[x] = mix(p.fg, p_, p.bg, bg_scale * (1 - p_))
 
     def framekey(self, t):
         return 0 if self.zeroes == self.leds else None
